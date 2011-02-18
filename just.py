@@ -40,8 +40,8 @@ if __name__ == "__main__":
 
 
     dep_graph = {}
-    entry_point = graphtools.build_dependency_graph(dep_graph, args.files)
-    dep_list = graphtools.build_dependency_list(dep_graph, entry_point)
+    entry_points = graphtools.build_dependency_graph(dep_graph, args.files)
+    dep_list = graphtools.build_dependency_list(dep_graph, entry_points)
 
     for f in dep_list:
         print os.path.relpath(f, '.')

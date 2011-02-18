@@ -15,30 +15,30 @@ def build_dependency_graph(graph, file_list):
     @return {str}
                 The graph's entry point
     """
-    # populate empty_graph
+
     for f in file_list:
         dep_graph_builder(graph, f)
-
-    singlularity = check_singularity(graph)
-    if not singlularity:
-        print "error: cannot resolve entry point, more than one possibility." + \
-                "\nMaybe more than one script?"
-        sys.exit(1)
 
     has_cycle = find_dep_cycle(graph)
     if has_cycle:
         print "error: dependencies form a cycle, cannot resolve."
         sys.exit(1)
 
-    # find entry point
-    entry_point = find_entry_point(graph)
+    entry_points = find_entry_points(graph)
 
-    return entry_point
+    return entry_points
 
-def build_dependency_list(dep_graph, entry_point):
+def build_dependency_list(dep_graph, entry_points):
+    """
+    @param {dict} dep_graph is a forest
+    @param {list} entry_points all the entry points in the dep_graph forest
+
+    @return {list} a dependecy list
+    """
     dep_list = []
 
-    build_dep_list_DFS(dep_graph, dep_list, entry_point)
+    for ep in entry_points:
+        build_dep_list_DFS(dep_graph, dep_list, ep)
 
     return dep_list
 
@@ -49,6 +49,21 @@ def build_dep_list_DFS(dep_graph, dep_list, node):
 
     dep_list.append(node)
 
+def find_entry_points(graph):
+    nodes = graph.keys()
+    entry_points = []
+
+    for node1 in nodes:
+        root = True
+        for node2 in nodes:
+            if node1 in graph[node2]:
+                root = False
+                break
+
+        if root:
+            entry_points.append(node1)
+
+    return entry_points
 
 def check_singularity(graph):
     """
@@ -107,13 +122,13 @@ def dep_graph_builder(graph, file_path):
         if len(line) == 0:
             break
 
-        m = re.match(r'//\s*#require\s+([a-zA-Z_0-9.]+)', line)
+        m = re.match(r'//#require\s+([a-zA-Z_0-9.]+)', line)
 
         if m != None:
             dep = m.group(1)
             if not os.path.isfile(dep):
                 nice_path = os.path.relpath(real_path, '.')
-                print "error: not such file %s in script %s" % (dep, nice_path)
+                print "error: no such file %s in script %s" % (dep, nice_path)
                 sys.exit(1)
 
             if os.path.splitext(dep)[1] != '.js':
@@ -225,3 +240,5 @@ def entry_point_DFS(graph, visited, node):
         if n in visited:
             continue
         entry_point_DFS(graph, visited, n)
+
+
