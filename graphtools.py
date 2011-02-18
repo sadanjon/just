@@ -17,7 +17,7 @@ def build_dependency_graph(graph, file_list):
     """
 
     for f in file_list:
-        dep_graph_builder(graph, f)
+        dep_graph_builder(graph, os.path.realpath(f))
 
     has_cycle = find_dep_cycle(graph)
     if has_cycle:
@@ -99,20 +99,18 @@ def dep_graph_builder(graph, file_path):
     ''' 
     populates the graph
     @param {str} file_path 
-                a path to an existing javascript file
+                a CANONICAL path to an existing javascript file
 
     @return {boolean} 
                 True if file_path added to graph, False otherwise
     '''
 
-    real_path = os.path.realpath(file_path)
-
-    if real_path in graph.keys():
+    if file_path in graph.keys():
         return
 
-    graph[real_path] = []
+    graph[file_path] = []
 
-    file = open(real_path, 'r')
+    file = open(file_path, 'r')
 
     # scan only first 200 lines
     # require statements are not very reasonable out of the head of
@@ -126,19 +124,22 @@ def dep_graph_builder(graph, file_path):
 
         if m != None:
             dep = m.group(1)
+            dep = os.path.join(os.path.dirname(file_path), dep)
             if not os.path.isfile(dep):
-                nice_path = os.path.relpath(real_path, '.')
-                print "error: no such file %s in script %s" % (dep, nice_path)
+                nice_path = os.path.relpath(file_path, '.')
+                dep_nice_path = os.path.relpath(dep, '.')
+                print "error: no such file %s in script %s" % (dep_nice_path, nice_path)
                 sys.exit(1)
 
             if os.path.splitext(dep)[1] != '.js':
-                nice_path = os.path.relpath(real_path, '.')
-                print "error: file %s in script %s is not a javascript file" % (dep, nice_path)
+                nice_path = os.path.relpath(file_path, '.')
+                dep_nice_path = os.path.relpath(dep, '.')
+                print "error: file %s in script %s is not a javascript file" % (dep_nice_path, nice_path)
                 sys.exit(1)
 
             dep_real_path = os.path.realpath(dep)
 
-            graph[real_path].append(dep_real_path)
+            graph[file_path].append(dep_real_path)
             dep_graph_builder(graph, dep_real_path)
 
 def find_dep_cycle(graph):

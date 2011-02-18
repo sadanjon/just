@@ -1,19 +1,22 @@
 #! /usr/bin/python
 
 import argparse, os, sys, graphtools
+from minifiers import *
+from minifiers import minifiers_list
 
 def create_args_parser():
     parser = argparse.ArgumentParser(description="Compile javascript files.",
            usage='just.py --html html_file --output {tags, compiled} file [ files ... ]')
 
     parser.add_argument('files', nargs='+', type=str, help='files to process.')
-    parser.add_argument('--html', required=True, type=str, help='the web page.')
-    parser.add_argument('--output', type=str, required=True,
-            choices=['tags', 'compiled'], 
+    parser.add_argument('--html', type=str, help='the web page.')
+    parser.add_argument('--output-mode', type=str, required=True,
+            choices=['tags', 'compiled', 'list'], 
             help= """
             'tags' means that script tags are produced on the html file.
             'compiled' means that one script file is produced that is then
             put in a script tag in the html file.""")
+    parser.add_argument('--output-file', type=str)
 
     return parser
 
@@ -34,7 +37,7 @@ if __name__ == "__main__":
             sys.exit(1)
 
     # confirm that the html file exists and is a file
-    if not os.path.isfile(args.html):
+    if args.html != None and not os.path.isfile(args.html):
         print "error: %s is not a file" % args.html
         sys.exit(1)
 
@@ -45,6 +48,9 @@ if __name__ == "__main__":
 
     for f in dep_list:
         print os.path.relpath(f, '.')
+
+    minifiers_list[0].minify(['--version'])
+
 
     
 
