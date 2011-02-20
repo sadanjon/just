@@ -15,7 +15,8 @@
 #   You should have received a copy of the GNU General Public License
 #   along with 'Just'.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, re, sys
+import os, re
+from util import JustError
 
 def build_dependency_graph(graph, file_list):
     """
@@ -38,8 +39,7 @@ def build_dependency_graph(graph, file_list):
 
     has_cycle = find_dep_cycle(graph)
     if has_cycle:
-        print "error: dependencies form a cycle, cannot resolve."
-        sys.exit(1)
+        raise JustError("dependencies form a cycle, cannot resolve dependencies")
 
     entry_points = find_entry_points(graph)
 
@@ -145,14 +145,12 @@ def dep_graph_builder(graph, file_path):
             if not os.path.isfile(dep):
                 nice_path = os.path.relpath(file_path, '.')
                 dep_nice_path = os.path.relpath(dep, '.')
-                print "error: no such file %s in script %s" % (dep_nice_path, nice_path)
-                sys.exit(1)
+                raise JustError("no such file %s in script %s" % (dep_nice_path, nice_path))
 
             if os.path.splitext(dep)[1] != '.js':
                 nice_path = os.path.relpath(file_path, '.')
                 dep_nice_path = os.path.relpath(dep, '.')
-                print "error: file %s in script %s is not a javascript file" % (dep_nice_path, nice_path)
-                sys.exit(1)
+                raise JustError("file %s in script %s is not a javascript file" % (dep_nice_path, nice_path))
 
             dep_real_path = os.path.realpath(dep)
 

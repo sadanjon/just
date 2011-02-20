@@ -25,7 +25,7 @@ from util import JustError
 def create_args_parser():
     parser = argparse.ArgumentParser(description="Compile javascript files.")
 
-    parser.add_argument('files', nargs='+', type=str, help='files to process.')
+    parser.add_argument('--files', nargs='+', type=str, help='files to process.')
     parser.add_argument('--html', type=str, help='the web page.')
     parser.add_argument('--output-mode', type=str, required=True,
             choices=['tags', 'minified', 'list', 'one-script'], 
@@ -41,7 +41,7 @@ def create_args_parser():
 
 if __name__ == "__main__":
     if sys.hexversion < 0x2060000:
-        printerr("error: 'Just' demands at least python version 2.6")
+        printerr("error: 'Just' needs at least version 2.6 of python")
         sys.exit(1)
         
     parser = create_args_parser()
@@ -97,8 +97,7 @@ if __name__ == "__main__":
                     exec("from minifiers.%s import minify" % args.minifier)
                     minify(minifiers_dir, dep_list)
                 else:
-                    raise JustError("no such minifier module %s" %
-                            args.minifier)
+                    raise JustError("no such minifier module %s" % args.minifier)
             elif args.output_mode == 'one-script':
                 pass
 

@@ -23,6 +23,9 @@ def printout(string):
 def printerr(string):
     sys.stderr.write(string + '\n')
 
+def concatenate_files(file_list, output_file):
+    pass
+
 class JustError(Exception):
     def __init__(self, msg):
         self.msg = msg
