@@ -1,15 +1,10 @@
-from minifier import Minifier
+from .. import minifiers_dir
 from subprocess import call
-from . import minifiers_list
 
-class ClosureCompiler(Minifier):
-    def __init__(self, name, short_name):
-        super(ClosureCompiler, self).__init__(name, short_name);
-
-    def minify(self, cli_args):
-        args = ["java", "-jar", "compiler.jar"] + cli_args
-        call(args, cwd="minifiers")
+def minify(output_file = None, cli_args = []):
+    #defaults = ["--compilation_level", "ADVANCED_OPTIMIZATIONS"]
+    args = ["java", "-jar", "compiler.jar"] + ['--version']
+    call(args, cwd=minifiers_dir)
         
 
-minifiers_list.append(ClosureCompiler("google closure compiler", "closurec"))
 
