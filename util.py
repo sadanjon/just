@@ -15,19 +15,17 @@
 #   You should have received a copy of the GNU General Public License
 #   along with 'Just'.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-from subprocess import call
+import sys
 
-def minify(minifiers_dir, file_list, output_file = None, cli_args = []):
-    jar_path = os.path.join(minifiers_dir, 'compiler.jar')
-    args = ["java", "-jar", jar_path] + cli_args
-    for f in file_list:
-        args += ['--js', f]
+def printout(string):
+    sys.stdout.write(string + '\n')
 
-    if output_file != None:
-        args += ['--output_file', output_file]
+def printerr(string):
+    sys.stderr.write(string + '\n')
 
-    call(args)
-        
+class JustError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
 
-
+    def __str__(self):
+        return "error: %s" % self.msg
