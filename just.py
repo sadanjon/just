@@ -18,6 +18,7 @@
 #   along with 'Just'.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse, os, sys, graphtools
+import minifiers
 from util import printout
 from util import printerr
 from util import JustError
@@ -93,11 +94,13 @@ if __name__ == "__main__":
                     printout("<script type='text/javascript' src='%s'></script>" % \
                             os.path.relpath(f, '.'))
             elif args.output_mode == 'minified':
-                if os.path.isfile(os.path.join(minifiers_dir, args.minifier + '.py')):
-                    exec("from minifiers.%s import minify" % args.minifier)
-                    minify(minifiers_dir, dep_list)
-                else:
+                minifier = getattr(minifiers, args.minifier, None)
+                if minifier == None:
                     raise JustError("no such minifier module %s" % args.minifier)
+                if args.output_file != None:
+                    minifier.minify(minifiers_dir, dep_list, args.output_file)
+                else:
+                    minifier.minify(minifiers_dir, dep_list)
             elif args.output_mode == 'one-script':
                 pass
 
