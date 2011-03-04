@@ -17,26 +17,24 @@
 #   You should have received a copy of the GNU General Public License
 #   along with 'Just'.  If not, see <http://www.gnu.org/licenses/>.
 
-import argparse, os, sys, graphtools
+import os, sys, graphtools
+from optparse import OptionParser
 import minifiers
 from util import printout
 from util import printerr
 from util import JustError
 
 def create_args_parser():
-    parser = argparse.ArgumentParser(description="Compile javascript files.")
+    parser = OptionParser(usage="just [options] [JS-FILE [JS-FILE [...]]]")
 
-    parser.add_argument('--files', nargs='+', type=str, help='files to process.')
-    parser.add_argument('--html', type=str, help='the web page.')
-    parser.add_argument('--output-mode', type=str, required=True,
-            choices=['tags', 'minified', 'list', 'one-script'], 
-            help= """
-            'tags' means that script tags are produced on the html file.
-            'compiled' means that one script file is produced that is then
-            put in a script tag in the html file.""")
-    parser.add_argument('--output-file', type=str)
-    parser.add_argument('--minifier', type=str, default='closurec', 
-            help='the minifier to use')
+    parser.add_option("-H", "--html", type="string", dest="html", metavar="HTMLFILE")
+    parser.add_option("-m", "--output-mode", choices=['tags', 'minified',
+        'list', 'one-script'], dest="output_mode", metavar="OUTPUT_MODE",
+        default="list")
+    parser.add_option("-o", "--output-file", type="string", dest="output_file",
+            metavar="OUTPUT_FILE")
+    parser.add_option("-c", "--minifier", type="string", dest="minifier",
+            metavar="MINIFIER")
 
     return parser
 
@@ -46,7 +44,7 @@ if __name__ == "__main__":
         sys.exit(1)
         
     parser = create_args_parser()
-    args = parser.parse_args()
+    (options, args) = parser.parse_args()
 
     # get script's working directory
     script_dir = os.path.abspath(os.path.dirname(sys.argv[0]))
@@ -55,8 +53,11 @@ if __name__ == "__main__":
     minifiers_dir = os.path.join(script_dir, 'minifiers')
 
     try:
+        if len(args) == 0:
+            raise JustError("no files given")
+
         # confirm list of files is valid
-        for file in args.files:
+        for file in args:
             if not os.path.isfile(file):
                 raise JustError("%s is not a file" % file)
 
@@ -65,43 +66,47 @@ if __name__ == "__main__":
 
         # build dependency list
         dep_graph = {}
-        entry_points = graphtools.build_dependency_graph(dep_graph, args.files)
+        entry_points = graphtools.build_dependency_graph(dep_graph, args)
         dep_list = graphtools.build_dependency_list(dep_graph, entry_points)
 
         # redirect stdout if output-file is defined
-        if args.output_file != None:
+        if options.output_file:
             sys.stdout = open(args.output_file, 'w')
 
         # if html file specified
-        elif args.html != None:
-            if not os.path.isfile(args.html):
-                raise JustError("%s is not a file" % args.html)
-            if args.output_mode == 'list':
+        elif options.html:
+            if not os.path.isfile(options.html):
+                raise JustError("%s is not a file" % options.html)
+            if options.output_mode == 'list':
+                #TODO: implement
                 pass
-            elif args.output_mode == 'tags':
+            elif options.output_mode == 'tags':
+                #TODO: implement
                 pass
-            elif args.output_mode == 'minified':
-                if args.output_file == None:
+            elif options.output_mode == 'minified':
+                if not options.output_file:
                     raise JustError("HTML file and 'minified' output mode defined, but no output file")
-            elif args.output_mode == 'one-script':
+            elif options.output_mode == 'one-script':
+                #TODO: implement
                 pass
         else:
-            if args.output_mode == 'list':
+            if options.output_mode == 'list':
                 for f in dep_list:
                     printout(os.path.relpath(f, '.'))
-            elif args.output_mode == 'tags':
+            elif options.output_mode == 'tags':
                 for f in dep_list:
                     printout("<script type='text/javascript' src='%s'></script>" % \
                             os.path.relpath(f, '.'))
-            elif args.output_mode == 'minified':
-                minifier = getattr(minifiers, args.minifier, None)
-                if minifier == None:
-                    raise JustError("no such minifier module %s" % args.minifier)
-                if args.output_file != None:
-                    minifier.minify(minifiers_dir, dep_list, args.output_file)
-                else:
+            elif options.output_mode == 'minified':
+                minifier = getattr(minifiers, options.minifier, None)
+                if not minifier:
+                    raise JustError("no such minifier module %s" % options.minifier)
+                if not options.output_file:
                     minifier.minify(minifiers_dir, dep_list)
-            elif args.output_mode == 'one-script':
+                else:
+                    minifier.minify(minifiers_dir, dep_list, options.output_file)
+            elif options.output_mode == 'one-script':
+                #TODO: implement
                 pass
 
     except JustError as e:
