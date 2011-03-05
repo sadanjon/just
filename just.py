@@ -18,22 +18,51 @@
 #   along with 'Just'.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, sys, graphtools
+from subprocess import call
 from optparse import OptionParser
 import minifiers
-from util import printout
-from util import printerr
-from util import JustError
-from util import write_tags
+from util import printout, printerr, JustError, write_tags
 
 def create_args_parser():
     parser = OptionParser(usage="just [options] [JS-FILE [JS-FILE [...]]]")
 
-    parser.add_option("-H", "--html", type="string", dest="html", metavar="HTMLFILE")
+    output_mode_help = \
+            """
+            OUTPUT_MODE is one of the following:
+
+            list - output a simple list of the files in the right order.
+            one-script - output a concatenated one-file from all the files
+                         in the right order.
+            tags - like the list option but each file in a script html tag.
+            minified - give the list of files to a minifier (using the
+            --minifier option) and output a minified version to a file
+            (specified with --output-file option).
+            """
+
+    html_help = \
+            """
+            If output-mode is 'tags' insert a script tags list to the 
+            html file between the '<!-- begin <section name> -->' and
+            '<!-- end -->' marker comments. 
+            If output-mode is 'minified' insert a single script tag 
+            that is the output-file generated from the specified 
+            minifier (with the --minifier option)
+            """
+
+    output_file_help = \
+            """
+            OUTPUT_FILE is the output of the minifier if the 
+            'minified' output mode is specified, or replaces the
+            standard output for any other output mode.
+            """
+
+    parser.add_option("-H", "--html", type="string", dest="html",
+            metavar="HTMLFILE", help=html_help)
     parser.add_option("-m", "--output-mode", choices=['tags', 'minified',
         'list', 'one-script'], dest="output_mode", metavar="OUTPUT_MODE",
-        default="list")
+        default="list", help=output_mode_help)
     parser.add_option("-o", "--output-file", type="string", dest="output_file",
-            metavar="OUTPUT_FILE")
+            metavar="OUTPUT_FILE", help=output_file_help)
     parser.add_option("-c", "--minifier", type="string", dest="minifier",
             metavar="MINIFIER")
 
@@ -102,7 +131,8 @@ if __name__ == "__main__":
                 if not minifier:
                     raise JustError("no such minifier module %s" % options.minifier)
                 if not options.output_file:
-                    minifier.minify(minifiers_dir, dep_list)
+                    minifier_args = minifier.minify(minifiers_dir, dep_list)
+                    call(minifier_args)
                 else:
                     minifier.minify(minifiers_dir, dep_list, options.output_file)
             elif options.output_mode == 'one-script':
