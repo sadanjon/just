@@ -23,6 +23,7 @@ import minifiers
 from util import printout
 from util import printerr
 from util import JustError
+from util import write_tags
 
 def create_args_parser():
     parser = OptionParser(usage="just [options] [JS-FILE [JS-FILE [...]]]")
@@ -81,8 +82,7 @@ if __name__ == "__main__":
                 #TODO: implement
                 pass
             elif options.output_mode == 'tags':
-                #TODO: implement
-                pass
+                write_tags(options.html, dep_list, "scripts")
             elif options.output_mode == 'minified':
                 if not options.output_file:
                     raise JustError("HTML file and 'minified' output mode defined, but no output file")
