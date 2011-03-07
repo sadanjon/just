@@ -27,34 +27,23 @@ def create_args_parser():
     parser = OptionParser(usage="just [options] [JS-FILE [JS-FILE [...]]]")
 
     output_mode_help = \
-            """
-            OUTPUT_MODE is one of the following:
+"""
+OUTPUT_MODE can be:
+list - output a simple list of the files in the right order.
+one-script - output a concatenated one-file from all the files
+in the right order.
+tags - like the list option but each file in a script html tag.
+minified - give the list of files to a minifier (using the
+--minifier option) and output a minified version to a file
+(specified with --output-file option).
+"""
 
-            list - output a simple list of the files in the right order.
-            one-script - output a concatenated one-file from all the files
-                         in the right order.
-            tags - like the list option but each file in a script html tag.
-            minified - give the list of files to a minifier (using the
-            --minifier option) and output a minified version to a file
-            (specified with --output-file option).
-            """
+    html_help = "The file to insert the script tags to."
 
-    html_help = \
-            """
-            If output-mode is 'tags' insert a script tags list to the 
-            html file between the '<!-- begin <section name> -->' and
-            '<!-- end -->' marker comments. 
-            If output-mode is 'minified' insert a single script tag 
-            that is the output-file generated from the specified 
-            minifier (with the --minifier option)
-            """
+    output_file_help = "Use OUTPUT_FILE with the minifier"
 
-    output_file_help = \
-            """
-            OUTPUT_FILE is the output of the minifier if the 
-            'minified' output mode is specified, or replaces the
-            standard output for any other output mode.
-            """
+    minifier_help = "Choose a minifier from the minifiers installed:\n"
+    minifier_help += ", ".join(minifiers.__all__)
 
     parser.add_option("-H", "--html", type="string", dest="html",
             metavar="HTMLFILE", help=html_help)
@@ -64,7 +53,7 @@ def create_args_parser():
     parser.add_option("-o", "--output-file", type="string", dest="output_file",
             metavar="OUTPUT_FILE", help=output_file_help)
     parser.add_option("-c", "--minifier", type="string", dest="minifier",
-            metavar="MINIFIER")
+            metavar="MINIFIER", help=minifier_help)
 
     return parser
 
@@ -75,6 +64,8 @@ if __name__ == "__main__":
         
     parser = create_args_parser()
     (options, args) = parser.parse_args()
+
+
 
     # get script's working directory
     script_dir = os.path.abspath(os.path.dirname(sys.argv[0]))

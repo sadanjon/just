@@ -16,6 +16,7 @@
 #   along with 'Just'.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+from . import Minifier
 
 description = "Google Closure Compiler"
 
@@ -31,5 +32,20 @@ def minify(minifiers_dir, file_list, output_file = None, cli_args = []):
 
     return args
         
+class ClosureCompiler(Minifier):
+    def __init__(self, name):
+        super(ClosureCompiler, self).__init__(name)
+
+    def minify(minifiers_dir, file_list, output_file = None, cli_args = []):
+        jar_path = os.path.join(Minifier.MINIFIERS_DIR, 'compiler.jar')
+        args = ["java", "-jar", jar_path] + cli_args
+
+        for f in file_list:
+            args += ['--js', f]
+
+        if output_file:
+            args += ['--output_file', output_file]
+
+        return args
 
 
