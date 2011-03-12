@@ -15,13 +15,72 @@
 #   You should have received a copy of the GNU General Public License
 #   along with 'Just'.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, re, os
+import sys, re
 
 def printout(string):
     sys.stdout.write(string + '\n')
 
 def printerr(string):
     sys.stderr.write(string + '\n')
+
+def write_list(htmlpath, str_list, section=""):
+    """
+    Writes the str_list into the html/php/whatever file
+
+    @param {str} htmlpath a valid path to a text file
+    @param {list.<str>} list of strings to write to file
+    @param {str} section name of the script tags section
+    """
+
+    begin_pattern = re.compile(r'(\s*)<!--\s*begin\s+(.*)\s*-->\s*')
+    end_pattern = re.compile(r'(\s*)<!--\s*end(\s*| .*)-->\s*')
+
+    indentation = None
+
+    htmlfile = open(htmlpath, "r+")
+
+    before_section = []
+    after_section = []
+
+    state = 0
+    for line in htmlfile:
+        if state == 0:
+            before_section.append(line)
+            match_begin = begin_pattern.match(line)
+            if match_begin:
+                if section.split() == match_begin.group(2).split():
+                    indentation = match_begin.group(1)
+                    state = 1
+        elif state == 1:
+            match_end = end_pattern.match(line)
+            if match_end:
+                after_section.append(line)
+                state = 2
+                break
+
+    if state != 2:
+        if state == 0:
+            raise JustError("Could not find begin marker for section: %s" % \
+                    section if len(section) > 0 else "(empty section name)")
+        elif state == 1:
+            raise JustError("Could not find end marker for section: %s")
+
+    # add rest of file to tags list
+    for line in htmlfile:
+        after_section += line
+
+    htmlfile.close()
+
+    # reopen with truncating writing skills!
+    htmlfile = open(htmlpath, "w+")
+
+    # adjust indentation
+    str_list = [indentation + s + "\n" for s in str_list]
+
+    # write the entire file again
+    htmlfile.writelines(before_section + str_list + after_section)
+
+    htmlfile.close()
 
 def write_tags(htmlpath, filelist, section=""):
     """
@@ -32,66 +91,28 @@ def write_tags(htmlpath, filelist, section=""):
     @param {str} section the name of the script tags section
     """
 
-    begin_pattern = re.compile(r'(\s*)<!--\s*begin\s+(.*)\s*-->\s*')
-    end_pattern = re.compile(r'(\s*)<!--\s*end\s*-->\s*')
+    tags = ["<script src=\"%s\" type=\"text/javascript\"></script>" %\
+            f for f in filelist]
 
-    indentation = None
+    write_list(htmlpath, tags, section)
 
-    htmlfile = open(htmlpath, "r+")
+def concat_files(file_list, output_file):
+    """
+    Concatenate a list of files
 
-    before_tags = []
-    after_tags = []
-
-    tags = ["<script src=\"%s\" type=\"text/javascript\"></script>\n" % \
-            os.path.relpath(f, os.path.dirname(htmlpath)) \
-            for f in filelist]
-
-    state = 0
-    for line in htmlfile:
-        if state == 0:
-            before_tags.append(line)
-            match_begin = begin_pattern.match(line)
-            if match_begin:
-                if section.split() == match_begin.group(2).split():
-                    indentation = match_begin.group(1)
-                    state = 1
-        elif state == 1:
-            match_end = end_pattern.match(line)
-            if match_end:
-                after_tags.append(line)
-                state = 2
-                break
-
-    if state != 2:
-        if state == 0:
-            raise JustError("Could not find begin marker for section %s" % \
-                    section)
-        elif state == 1:
-            raise JustError("Could not find end marker for section htmlfile.close()")
-
-    # add rest of file to tags list
-    for line in htmlfile:
-        after_tags += line
-
-    htmlfile.close()
-
-    htmlfile = open(htmlpath, "w+")
-
-    # adjust indentation
-    tags = [indentation + t for t in tags]
-
-    # write the entire file again
-    htmlfile.writelines(before_tags + tags + after_tags)
-
-    htmlfile.close()
+    @param {list.<str>} file_list a list of file paths to concatenate
+    @param {file} output_file an open file object to output the concatenated
+    result
+    """
+    for file_path in file_list:
+        input = open(file_path, "r")
+        output_file.writelines(input)
+        input.close()
 
 
-def concatenate_files(file_list, output_file):
-    pass
-
-class JustError(Exception):
+class JustError(BaseException):
     def __init__(self, msg):
         self.msg = msg
 
     def __str__(self):
-        return "error: %s" % self.msg
+        return "'Just' has encountered a problem:\n\t" + self.msg

@@ -31,7 +31,7 @@ def build_dependency_graph(graph, file_list):
                 is the javascript files to form the dependency graph from
                 
     @return {str}
-                The graph's entry point
+                The graph's entry points
     """
 
     for f in file_list:

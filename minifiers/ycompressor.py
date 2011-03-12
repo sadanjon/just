@@ -18,21 +18,21 @@
 import os
 from . import MINIFIERS_DIR
 
-name = 'closurec'
-description = "Google Closure Compiler"
+name = 'ycompressor'
+description = "Yahoo Compressor"
 
 def get_minify_args(input_file, output_file = None, cli_args = None):
-    jar_path = os.path.join(MINIFIERS_DIR, 'compiler.jar')
+    jar_path = os.path.join(MINIFIERS_DIR, 'yuicompressor-2.4.2.jar')
+
     args = ["java", "-jar", jar_path]
 
-    args += ['--js', input_file]
-
     if output_file:
-        args += ['--js_output_file', output_file]
+        args += ['-o', output_file]
 
     if cli_args:
         args += cli_args
 
+    args.append(input_file)
 
     return args
 
